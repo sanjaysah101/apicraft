@@ -7,6 +7,9 @@
   "bin": {
     "apicraft": "./index.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "node --test",
     "lint": "echo 'No linter configured'",
