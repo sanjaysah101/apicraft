@@ -1,0 +1,45 @@
+{
+  "name": "apicraft",
+  "version": "0.0.1",
+  "description": "A unified CLI for the complete API development lifecycle - from testing to mocking to code generation",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "apicraft": "./index.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "echo 'No linter configured'",
+    "prepublishOnly": "node scripts/count-lines.js"
+  },
+  "keywords": [
+    "api",
+    "cli",
+    "http",
+    "rest",
+    "testing",
+    "mock",
+    "development",
+    "curl",
+    "postman",
+    "insomnia"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/apicraft.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/apicraft/issues"
+  },
+  "homepage": "https://github.com/yourusername/apicraft#readme",
+  "files": [
+    "index.js",
+    "README.md",
+    "LICENSE"
+  ]
+}
