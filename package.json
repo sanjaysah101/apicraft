@@ -31,12 +31,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/apicraft.git"
+    "url": "https://github.com/sanjaysah101/apicraft.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/apicraft/issues"
+    "url": "https://github.com/sanjaysah101/apicraft/issues"
   },
-  "homepage": "https://github.com/yourusername/apicraft#readme",
+  "homepage": "https://github.com/sanjaysah101/apicraft#readme",
   "files": [
     "index.js",
     "README.md",
