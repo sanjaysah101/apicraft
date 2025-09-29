@@ -16,7 +16,7 @@ Practical examples and use cases for apicraft.
 ### Simple GET Request
 
 ```bash
-apicraft get https://api.github.com/users/octocat
+apicraft get https://api.github.com/users/sanjaysah101
 ```
 
 ### POST with JSON Body
@@ -77,7 +77,7 @@ apicraft get {{baseUrl}}/users
 ```bash
 apicraft env dev
 apicraft set baseUrl https://api.github.com
-apicraft set username octocat
+apicraft set username sanjaysah101
 
 # Use variables
 apicraft get {{baseUrl}}/users/{{username}}
@@ -290,7 +290,7 @@ fetch('https://api.example.com/users', {
 ### Generate Axios Code
 
 ```bash
-apicraft get https://api.github.com/users/octocat
+apicraft get https://api.github.com/users/sanjaysah101
 apicraft generate axios
 ```
 

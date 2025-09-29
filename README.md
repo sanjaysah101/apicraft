@@ -1,4 +1,4 @@
-# 🎨 apicraft
+# 🎨 Apicraft
 
 > A unified CLI for the complete API development lifecycle - from testing to mocking to code generation
 
@@ -328,7 +328,7 @@ This project was built for the 100lines.dev hackathon with a strict 300-line lim
 
 ## 📄 License
 
-MIT © [Your Name]
+MIT © @ansospace/apicraft
 
 ## 🏅 Hackathon
 

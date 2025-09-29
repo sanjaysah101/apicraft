@@ -67,7 +67,7 @@ apicraft --help
 
    ```bash
    apicraft --help
-   apicraft get https://api.github.com/users/octocat
+   apicraft get https://api.github.com/users/sanjaysah101
    ```
 
 6. **Commit with clear message**:
@@ -144,8 +144,8 @@ Currently, there are no automated tests (to save lines in the main file). When t
 ```bash
 # Basic functionality
 apicraft init
-apicraft get https://api.github.com/users/octocat
-apicraft save test get https://api.github.com/users/octocat
+apicraft get https://api.github.com/users/sanjaysah101
+apicraft save test get https://api.github.com/users/sanjaysah101
 apicraft run test
 apicraft history
 apicraft generate curl
@@ -159,7 +159,7 @@ apicraft mock ./test-mocks 3000
 # Environment
 apicraft env dev
 apicraft set baseUrl https://api.github.com
-apicraft get {{baseUrl}}/users/octocat
+apicraft get {{baseUrl}}/users/sanjaysah101
 ```
 
 ## 📄 License
