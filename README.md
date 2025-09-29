@@ -24,13 +24,13 @@
 
 ```bash
 # Using pnpm (recommended)
-pnpm install -g apicraft
+pnpm install -g @ansospace/apicraft
 
 # Using npm
-npm install -g apicraft
+npm install -g @ansospace/apicraft
 
 # Or run directly with npx
-npx apicraft <command>
+npx @ansospace/apicraft <command>
 ```
 
 ### First Steps

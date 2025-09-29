@@ -1,5 +1,5 @@
 {
-  "name": "apicraft",
+  "name": "@ansospace/apicraft",
   "version": "0.0.1",
   "description": "A unified CLI for the complete API development lifecycle - from testing to mocking to code generation",
   "type": "module",

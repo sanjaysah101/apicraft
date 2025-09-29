@@ -4,9 +4,9 @@ import { join, resolve } from 'path';
 import { createServer } from 'http';
 import { parse } from 'url';
 
-const CONFIG_FILE = '.apicraft.json';
-const HISTORY_FILE = '.apicraft-history.json';
-const VERSION = '1.0.0';
+const CONFIG_FILE = '.apicraft.json', HISTORY_FILE = '.apicraft-history.json', VERSION = '0.0.1';
+
+const reset = '\x1b[0m', bold = '\x1b[1m', dim = '\x1b[2m';
 
 class ApiCraft {
   constructor() {
@@ -38,31 +38,18 @@ class ApiCraft {
     };
   }
 
-  saveConfig() {
-    writeFileSync(CONFIG_FILE, JSON.stringify(this.config, null, 2));
-  }
+  saveConfig() { writeFileSync(CONFIG_FILE, JSON.stringify(this.config, null, 2)); }
 
   loadHistory() {
-    if (existsSync(HISTORY_FILE)) {
-      try {
-        const data = JSON.parse(readFileSync(HISTORY_FILE, 'utf8'));
-        return data.requests || [];
-      } catch (e) {
-        return [];
-      }
-    }
-    return [];
+    if (!existsSync(HISTORY_FILE)) return [];
+    try { return JSON.parse(readFileSync(HISTORY_FILE, 'utf8')).requests || []; } catch { return []; }
   }
 
-  saveHistory() {
-    writeFileSync(HISTORY_FILE, JSON.stringify({ requests: this.history.slice(-50) }, null, 2));
-  }
+  saveHistory() { writeFileSync(HISTORY_FILE, JSON.stringify({ requests: this.history.slice(-50) }, null, 2)); }
 
   interpolate(str) {
     const env = this.config.environments[this.currentEnv] || this.config.environments.default;
-    return str.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-      return env[key] || env.baseUrl || match;
-    });
+    return str.replace(/\{\{(\w+)\}\}/g, (match, key) => env[key] || env.baseUrl || match);
   }
 
   async request(method, url, options = {}) {
@@ -79,22 +66,14 @@ class ApiCraft {
 
     if (options.body) {
       fetchOptions.body = typeof options.body === 'string' ? options.body : JSON.stringify(options.body);
-      if (!headers['Content-Type']) {
-        headers['Content-Type'] = 'application/json';
-      }
+      if (!headers['Content-Type']) headers['Content-Type'] = 'application/json';      
     }
 
     try {
       const response = await fetch(fullUrl, fetchOptions);
       const duration = Date.now() - startTime;
       const contentType = response.headers.get('content-type') || '';
-      let body;
-
-      if (contentType.includes('application/json')) {
-        body = await response.json();
-      } else {
-        body = await response.text();
-      }
+      const body = contentType.includes('application/json') ? await response.json() : await response.text();
 
       const result = {
         status: response.status,
@@ -106,36 +85,19 @@ class ApiCraft {
         method: method.toUpperCase()
       };
 
-      this.addToHistory(result, options.body);
+      this.history.push({ ...result, requestBody: options.body, timestamp: new Date().toISOString() });
+      this.saveHistory();
       return result;
-    } catch (error) {
-      throw new Error(`Request failed: ${error.message}`);
-    }
-  }
-
-  addToHistory(request, requestBody = null) {
-    this.history.push({
-      ...request,
-      requestBody,
-      timestamp: new Date().toISOString()
-    });
-    this.saveHistory();
+    } catch (error) { throw new Error(`Request failed: ${error.message}`); }
   }
 
   formatResponse(response) {
-    const statusColor = response.status < 300 ? '\x1b[32m' : response.status < 400 ? '\x1b[33m' : '\x1b[31m';
-    const reset = '\x1b[0m';
-    const bold = '\x1b[1m';
-    const dim = '\x1b[2m';
+    const statusColor = response.status < 300 ? '\x1b[32m' : response.status < 400 ? '\x1b[33m' : '\x1b[31m';    
 
     console.log(`\n${bold}${statusColor}${response.status} ${response.statusText}${reset} ${dim}(${response.duration}ms)${reset}`);
     console.log(`${dim}${response.method} ${response.url}${reset}\n`);
 
-    if (typeof response.body === 'object') {
-      console.log(JSON.stringify(response.body, null, 2));
-    } else {
-      console.log(response.body);
-    }
+    console.log(typeof response.body === 'object' ? JSON.stringify(response.body, null, 2) : response.body);
   }
 
   generateCode(response, type = 'fetch') {
@@ -163,9 +125,8 @@ class ApiCraft {
       Object.entries(headers).forEach(([key, value]) => {
         cmd += ` -H '${key}: ${value}'`;
       });
-      if (requestBody && typeof requestBody === 'object') {
-        cmd += ` -d '${JSON.stringify(requestBody)}'`;
-      }
+      if (requestBody && typeof requestBody === 'object') cmd += ` -d '${JSON.stringify(requestBody)}'`;
+      
       return cmd;
     }
     return 'Unknown code type';
@@ -178,38 +139,26 @@ class ApiCraft {
   }
 
   runSavedRequest(name) {
-    const saved = this.config.saved[name];
-    if (!saved) {
-      throw new Error(`Request '${name}' not found`);
-    }
-    return this.request(saved.method, saved.url, saved.options);
+    return this.config.saved[name] ? this.request(this.config.saved[name].method, this.config.saved[name].url, this.config.saved[name].options) : (() => { throw new Error(`Request '${name}' not found`); })();
   }
 
   listSavedRequests() {
     const saved = Object.keys(this.config.saved);
-    if (saved.length === 0) {
-      console.log('No saved requests');
-      return;
-    }
+    if (saved.length === 0) return console.log('No saved requests');
     console.log('\nSaved Requests:');
-    saved.forEach(name => {
-      const req = this.config.saved[name];
-      console.log(`  ${name}: ${req.method} ${req.url}`);
-    });
+    saved.forEach(name => console.log(`  ${name}: ${this.config.saved[name].method} ${this.config.saved[name].url}`));
   }
 
   setEnvironment(env) {
-    if (!this.config.environments[env]) {
-      throw new Error(`Environment '${env}' not found`);
-    }
+    if (!this.config.environments[env]) throw new Error(`Environment '${env}' not found`);
+    
     this.currentEnv = env;
     console.log(`✓ Switched to '${env}' environment`);
   }
 
   setEnvVariable(key, value) {
-    if (!this.config.environments[this.currentEnv]) {
-      this.config.environments[this.currentEnv] = { headers: {} };
-    }
+    if (!this.config.environments[this.currentEnv]) this.config.environments[this.currentEnv] = { headers: {} };
+    
     this.config.environments[this.currentEnv][key] = value;
     this.saveConfig();
     console.log(`✓ Set ${key} = ${value} in '${this.currentEnv}' environment`);
@@ -217,32 +166,25 @@ class ApiCraft {
 
   showHistory(limit = 10) {
     const recent = this.history.slice(-limit).reverse();
-    if (recent.length === 0) {
-      console.log('No history');
-      return;
-    }
+    if (recent.length === 0) return console.log('No history');
     console.log('\nRecent Requests:');
     recent.forEach((req, idx) => {
       const statusColor = req.status < 300 ? '\x1b[32m' : req.status < 400 ? '\x1b[33m' : '\x1b[31m';
-      const reset = '\x1b[0m';
       console.log(`  ${limit - idx}. ${req.method} ${req.url} ${statusColor}${req.status}${reset} (${req.duration}ms)`);
     });
   }
 
   replayRequest(index) {
     const req = this.history[this.history.length - index];
-    if (!req) {
-      throw new Error(`No request at index ${index}`);
-    }
+    if (!req) throw new Error(`No request at index ${index}`);
+    
     return this.request(req.method, req.url, { body: req.requestBody });
   }
 
   async startMockServer(directory, port = 3000) {
     const mockDir = resolve(directory);
-    if (!existsSync(mockDir)) {
-      throw new Error(`Directory '${directory}' not found`);
-    }
-
+    if (!existsSync(mockDir)) throw new Error(`Directory '${directory}' not found`);
+    
     const mocks = this.loadMockFiles(mockDir);
     
     const server = createServer((req, res) => {
@@ -274,9 +216,7 @@ class ApiCraft {
     server.listen(port, () => {
       console.log(`\n🚀 Mock server running on http://localhost:${port}`);
       console.log(`Loaded ${Object.keys(mocks).length} mock endpoints:\n`);
-      Object.keys(mocks).forEach(key => {
-        console.log(`  ${key}`);
-      });
+      Object.keys(mocks).forEach(key => console.log(`  ${key}`));
     });
   }
 
@@ -347,13 +287,12 @@ async function main() {
   const args = process.argv.slice(2);
   const craft = new ApiCraft();
 
-  if (args.length === 0 || args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
+  if (args.length === 0 || ['help', '--help', '-h'].includes(args[0])) {
     craft.showHelp();
     process.exit(0);
   }
 
   const command = args[0];
-  
   try {
     if (['get', 'post', 'put', 'delete', 'patch'].includes(command)) {
       const url = args[1];
@@ -370,9 +309,8 @@ async function main() {
       if (!name) throw new Error('Request name required');
       const response = await craft.runSavedRequest(name);
       craft.formatResponse(response);
-    } else if (command === 'list') {
-      craft.listSavedRequests();
-    } else if (command === 'generate') {
+    } else if (command === 'list') craft.listSavedRequests();
+    else if (command === 'generate') {
       const type = args[1] || 'fetch';
       if (craft.history.length === 0) throw new Error('No requests in history');
       const lastRequest = craft.history[craft.history.length - 1];
@@ -401,9 +339,7 @@ async function main() {
       const port = parseInt(args[2]) || 3000;
       if (!directory) throw new Error('Directory required');
       await craft.startMockServer(directory, port);
-    } else {
-      throw new Error(`Unknown command: ${command}`);
-    }
+    } else throw new Error(`Unknown command: ${command}`);
   } catch (error) {
     console.error(`\x1b[31m✗ Error: ${error.message}\x1b[0m`);
     process.exit(1);
