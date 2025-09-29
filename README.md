@@ -252,6 +252,22 @@ pnpm link --global
 apicraft --help
 ```
 
+### Running Locally Without Installation
+
+If you prefer not to install globally, you can run the tool directly using Node.js:
+
+```bash
+# Clone and navigate to the project
+git clone https://github.com/sanjaysah101/apicraft.git
+cd apicraft
+
+# Run commands directly
+node index.js get https://api.github.com/users/sanjaysah101
+node index.js --help
+node index.js init
+node index.js env dev
+```
+
 ### Line Count Verification
 
 ```bash

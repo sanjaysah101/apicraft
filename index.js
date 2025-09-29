@@ -106,16 +106,17 @@ class ApiCraft {
         method: method.toUpperCase()
       };
 
-      this.addToHistory(result);
+      this.addToHistory(result, options.body);
       return result;
     } catch (error) {
       throw new Error(`Request failed: ${error.message}`);
     }
   }
 
-  addToHistory(request) {
+  addToHistory(request, requestBody = null) {
     this.history.push({
       ...request,
+      requestBody,
       timestamp: new Date().toISOString()
     });
     this.saveHistory();
@@ -138,14 +139,14 @@ class ApiCraft {
   }
 
   generateCode(response, type = 'fetch') {
-    const { method, url, body } = response;
+    const { method, url, requestBody } = response;
     const env = this.config.environments[this.currentEnv];
     const headers = env.headers || {};
 
     if (type === 'fetch') {
       const options = { method };
       if (Object.keys(headers).length > 0) options.headers = headers;
-      if (body && typeof body === 'object') options.body = JSON.stringify(body);
+      if (requestBody && typeof requestBody === 'object') options.body = JSON.stringify(requestBody);
       return `fetch('${url}', ${JSON.stringify(options, null, 2)})
   .then(res => res.json())
   .then(data => console.log(data))
@@ -153,8 +154,8 @@ class ApiCraft {
     } else if (type === 'axios') {
       const config = {};
       if (Object.keys(headers).length > 0) config.headers = headers;
-      if (body && typeof body === 'object') config.data = body;
-      return `axios.${method.toLowerCase()}('${url}'${body ? ', ' + JSON.stringify(body, null, 2) : ''}${Object.keys(config).length > 0 ? ', ' + JSON.stringify(config, null, 2) : ''})
+      if (requestBody && typeof requestBody === 'object') config.data = requestBody;
+      return `axios.${method.toLowerCase()}('${url}'${requestBody ? ', ' + JSON.stringify(requestBody, null, 2) : ''}${Object.keys(config).length > 0 ? ', ' + JSON.stringify(config, null, 2) : ''})
   .then(res => console.log(res.data))
   .catch(err => console.error(err));`;
     } else if (type === 'curl') {
@@ -162,8 +163,8 @@ class ApiCraft {
       Object.entries(headers).forEach(([key, value]) => {
         cmd += ` -H '${key}: ${value}'`;
       });
-      if (body && typeof body === 'object') {
-        cmd += ` -d '${JSON.stringify(body)}'`;
+      if (requestBody && typeof requestBody === 'object') {
+        cmd += ` -d '${JSON.stringify(requestBody)}'`;
       }
       return cmd;
     }
@@ -233,7 +234,7 @@ class ApiCraft {
     if (!req) {
       throw new Error(`No request at index ${index}`);
     }
-    return this.request(req.method, req.url, { body: req.body });
+    return this.request(req.method, req.url, { body: req.requestBody });
   }
 
   async startMockServer(directory, port = 3000) {
